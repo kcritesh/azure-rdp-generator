@@ -7,13 +7,61 @@ function execAz(cmd) {
 }
 
 function generatePassword(length = 12) {
-  return crypto.randomBytes(length).toString("base64").slice(0, length);
+  // Ensure length is within Azure limits (12-123 characters)
+  length = Math.max(12, Math.min(length, 123));
+
+  // Generate initial random password
+  let password = crypto.randomBytes(length).toString("base64").slice(0, length);
+
+  // Check if password meets complexity requirements (3 of 4 character types)
+  const hasLowercase = /[a-z]/.test(password);
+  const hasUppercase = /[A-Z]/.test(password);
+  const hasNumber = /[0-9]/.test(password);
+  const hasSpecial = /[^A-Za-z0-9]/.test(password);
+
+  const requirementsMet =
+    [hasLowercase, hasUppercase, hasNumber, hasSpecial].filter(Boolean)
+      .length >= 3;
+
+  // If requirements not met, regenerate with explicit character types
+  if (!requirementsMet) {
+    const lowercase = "abcdefghijklmnopqrstuvwxyz";
+    const uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const numbers = "0123456789";
+    const special = "!@#$%^&*()-_=+[]{}|;:,.<>?";
+
+    let chars = "";
+    chars += hasLowercase ? "" : lowercase;
+    chars += hasUppercase ? "" : uppercase;
+    chars += hasNumber ? "" : numbers;
+    chars += hasSpecial ? "" : special;
+
+    // Ensure we have at least 3 character types
+    if (!hasLowercase) password = replaceRandomChar(password, lowercase);
+    if (!hasUppercase) password = replaceRandomChar(password, uppercase);
+    if (!hasNumber) password = replaceRandomChar(password, numbers);
+    if (
+      !hasSpecial &&
+      [hasLowercase, hasUppercase, hasNumber].filter(Boolean).length < 2
+    ) {
+      password = replaceRandomChar(password, special);
+    }
+  }
+
+  return password;
+}
+
+// Helper function to replace a random character in the password
+function replaceRandomChar(str, charSet) {
+  const index = Math.floor(Math.random() * str.length);
+  const randomChar = charSet.charAt(Math.floor(Math.random() * charSet.length));
+  return str.substring(0, index) + randomChar + str.substring(index + 1);
 }
 
 export function createVM(vmName, resourceGroup, location, username) {
   const password = generatePassword();
   execAz(`vm create --name ${vmName} --resource-group ${resourceGroup} \
-    --image Win2022AzureEditionCore --size Standard_B2s \
+    --image Win2022Datacenter --size Standard_B2s \
     --admin-username ${username} --admin-password "${password}" \
     --location ${location} --authentication-type password \
     --custom-data init.ps1 --public-ip-sku Basic`);
