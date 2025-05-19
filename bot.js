@@ -2,6 +2,7 @@ import TelegramBot from "node-telegram-bot-api";
 import { config } from "./config.js";
 import * as azure from "./azure.js";
 import { saveCreds, getCreds, listSaved } from "./db.js";
+import fs from "fs";
 
 const bot = new TelegramBot(config.telegramToken, { polling: true });
 
