@@ -1,0 +1,27 @@
+# Git
+.git
+.gitignore
+
+# Node.js
+node_modules
+npm-debug.log
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Docs
+README.md
+LICENSE
+
+# Data
+# We exclude this because we'll mount it as a volume
+/data
+
+# Local environment
+.env
+*.local
+
+# Others
+.DS_Store
